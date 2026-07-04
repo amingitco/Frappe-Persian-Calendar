@@ -1,0 +1,182 @@
+/* ==============================================================================
+   🎨 SAFE NATIVE STYLING & FULLCALENDAR RTL PATCH (ZERO-INTERFERENCE)
+   ============================================================================== */
+
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('/assets/persian_calendar/fonts/Vazirmatn-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('/assets/persian_calendar/fonts/Vazirmatn-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-display: swap;
+}
+
+/* اعمال فونت با اولویت بالا به ریشه و تگ‌های اصلی فقط در حالت فارسی */
+html[lang="fa"], body[lang="fa"], html[dir="rtl"], body[dir="rtl"] {
+    --font-stack: 'Vazirmatn', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+    --font-sans: 'Vazirmatn', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+html[lang="fa"], html[lang="fa"] body, html[lang="fa"] input, html[lang="fa"] select, html[lang="fa"] textarea, html[lang="fa"] button, html[lang="fa"] .frappe-control, html[lang="fa"] .frappe-control *, html[lang="fa"] .form-control, html[lang="fa"] .btn,
+html[dir="rtl"], html[dir="rtl"] body, html[dir="rtl"] input, html[dir="rtl"] select, html[dir="rtl"] textarea, html[dir="rtl"] button, html[dir="rtl"] .frappe-control, html[dir="rtl"] .frappe-control *, html[dir="rtl"] .form-control, html[dir="rtl"] .btn,
+body[lang="fa"], body[lang="fa"] input, body[lang="fa"] select, body[lang="fa"] textarea, body[lang="fa"] button, body[lang="fa"] .frappe-control, body[lang="fa"] .frappe-control *, body[lang="fa"] .form-control, body[lang="fa"] .btn,
+body[dir="rtl"], body[dir="rtl"] input, body[dir="rtl"] select, body[dir="rtl"] textarea, body[dir="rtl"] button, body[dir="rtl"] .frappe-control, body[dir="rtl"] .frappe-control *, body[dir="rtl"] .form-control, body[dir="rtl"] .btn {
+    font-family: var(--font-stack) !important;
+}
+
+/* 📅 اصلاح تقویم بزرگ FullCalendar */
+/* حذف flex-direction: row-reverse قبلی که فلش‌ها را برعکس می‌کرد */
+.fc-toolbar-chunk > div, 
+.fc-toolbar-chunk .btn-group {
+    display: flex !important;
+}
+
+/* تراز کردن متن دکمه‌های تقویم بزرگ */
+.fc-button-group .btn, .fc-button {
+    text-align: center !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* چرخش آیکون‌های بعدی/قبلی در تقویم در حالت RTL */
+[dir="rtl"] .fc-prev-button svg,
+[dir="rtl"] .fc-next-button svg {
+    transform: scaleX(-1);
+}
+
+/* اصلاح ترتیب دکمه‌های نما (ماه، هفته، روز) در RTL */
+[dir="rtl"] .fc-button-group .btn-group {
+    display: flex !important;
+    flex-direction: row-reverse !important;
+}
+
+/* 📅 پچ تقویم بزرگ: انتقال روز تعطیل از یکشنبه به جمعه (از طریق CSS در صورت لزوم) */
+.fc-theme-standard td.fc-day-sun,
+.fc-theme-standard td.fc-day-sat {
+    background-color: transparent !important;
+}
+.fc-theme-standard td.fc-day-fri {
+    background-color: var(--highlight-color, rgba(234, 84, 85, 0.06)) !important;
+}
+
+/* ==============================================================================
+   استایل‌های کامل پاپ‌آپ تاریخ جلالی (هماهنگ با رابط کاربری اصلی Frappe 16)
+   ============================================================================== */
+#custom-jalali-global-picker {
+    background: var(--fg-color, #ffffff) !important;
+    border: 1px solid var(--border-color, #d1d5db) !important;
+    border-radius: var(--border-radius-md, 8px) !important;
+    box-shadow: var(--shadow-2xl, 0 10px 25px rgba(0,0,0,0.15)) !important;
+    width: 270px !important;
+    font-family: 'Vazirmatn', inherit !important;
+    direction: rtl !important;
+    z-index: 9999 !important;
+    position: absolute !important;
+    color: var(--text-color) !important;
+}
+#custom-jalali-global-picker.active {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+#custom-jalali-global-picker .datepicker--nav {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 8px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    font-weight: bold !important;
+}
+#custom-jalali-global-picker .datepicker--nav-action {
+    cursor: pointer !important;
+    padding: 4px 8px !important;
+    border-radius: var(--border-radius-sm, 4px) !important;
+    user-select: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+#custom-jalali-global-picker .datepicker--nav-action:hover,
+#custom-jalali-global-picker .datepicker--nav-title:hover {
+    background-color: var(--fg-hover-color, #f3f4f6) !important;
+    border-radius: var(--border-radius-sm, 4px) !important;
+}
+#custom-jalali-global-picker .datepicker--nav-title {
+    cursor: pointer !important;
+    padding: 4px 8px !important;
+}
+#custom-jalali-global-picker .datepicker--content {
+    padding: 8px !important;
+}
+#custom-jalali-global-picker .datepicker--days {
+    display: flex !important;
+    flex-direction: column !important;
+}
+#custom-jalali-global-picker .datepicker--day-names {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    text-align: center !important;
+    font-size: 0.8rem !important;
+    color: var(--text-muted, #6b7280) !important;
+    margin-bottom: 4px !important;
+}
+#custom-jalali-global-picker .datepicker--cells-days {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    gap: 2px !important;
+}
+#custom-jalali-global-picker .datepicker--cell {
+    text-align: center !important;
+    padding: 6px 0 !important;
+    border-radius: var(--border-radius-tiny, 4px) !important;
+    cursor: pointer !important;
+    font-size: 0.9rem !important;
+    color: var(--text-color, #1f2937) !important;
+}
+#custom-jalali-global-picker .datepicker--cell.-other-month- {
+    opacity: 0.3 !important;
+    pointer-events: none !important;
+}
+#custom-jalali-global-picker .datepicker--cell:hover {
+    background-color: var(--fg-hover-color, #f3f4f6) !important;
+}
+#custom-jalali-global-picker .datepicker--cell.-current- {
+    color: var(--text-color) !important;
+    font-weight: bold !important;
+}
+#custom-jalali-global-picker .datepicker--cell.-selected-,
+#custom-jalali-global-picker .datepicker--cell.-current-.-selected- {
+    background: var(--date-active-bg, #3b82f6) !important;
+    color: var(--date-active-text, #fff) !important;
+}
+#custom-jalali-global-picker .datepicker--buttons {
+    display: flex !important;
+    justify-content: center !important;
+    padding: 4px !important;
+    border-top: 1px solid var(--border-color) !important;
+}
+#custom-jalali-global-picker .datepicker--button {
+    cursor: pointer !important;
+    color: var(--text-color) !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    width: 100% !important;
+    padding: 6px !important;
+    border-radius: var(--border-radius-sm, 4px) !important;
+}
+#custom-jalali-global-picker .datepicker--button:hover {
+    background-color: var(--fg-hover-color, #f3f4f6) !important;
+}
+
+/* مسدود کردن پاپ‌آپ پیش‌فرض میلادی */
+body > .datepicker:not(#custom-jalali-global-picker) {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
