@@ -60,25 +60,38 @@
 
     function gToJ(gStr) {
         if (!gStr) return "";
-        let datePart = gStr.split(" ")[0];
+        let partsFull = gStr.split(" ");
+        let datePart = partsFull[0];
         if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return gStr; // Only convert Valid YYYY-MM-DD
         const parts = datePart.split("-");
         const [jy, jm, jd] = JalaliCal.g2j(parseInt(parts[0], 10), parseInt(parts[1], 10), parseInt(parts[2], 10));
         let res = `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
+        if (partsFull.length > 1) {
+            res += " " + partsFull.slice(1).join(" ");
+        }
         console.log(`[Jalali Engine] gToJ: ${gStr} -> ${res}`);
         return res;
     }
 
     function jToG(jStr) {
         if (!jStr) return "";
-        let datePart = jStr.split(" ")[0].replace(/[jJ]/g, "");
+        let partsFull = jStr.split(" ");
+        let datePart = partsFull[0].replace(/[jJ]/g, "");
         if (!/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(datePart)) return jStr; // Only convert Valid YYYY/MM/DD
         const parts = datePart.split("/");
         const [gy, gm, gd] = JalaliCal.j2g(parseInt(parts[0], 10), parseInt(parts[1], 10), parseInt(parts[2], 10));
         let res = `${gy}-${String(gm).padStart(2, '0')}-${String(gd).padStart(2, '0')}`;
+        if (partsFull.length > 1) {
+            res += " " + partsFull.slice(1).join(" ");
+        }
         console.log(`[Jalali Engine] jToG: ${jStr} -> ${res}`);
         return res;
     }
+
+    window.JalaliDate = {
+        gToJ: gToJ,
+        jToG: jToG
+    };
 
     let currentView = "days"; // 'days', 'months', 'years'
     let currentDecade = Math.floor(targetYear / 10) * 10;
@@ -178,7 +191,7 @@
         });
 
         pickerEl.addEventListener("input", function(e) {
-            if (e.target.classList.contains("custom-bridge-hour") || e.target.classList.contains("custom-bridge-min")) {
+            if (e.target.classList.contains("custom-bridge-hour") || e.target.classList.contains("custom-bridge-min") || e.target.classList.contains("custom-bridge-sec")) {
                 if (selectedDayCache) {
                     updateInputAndOptionallyClose(selectedDayCache, false, true);
                 } else if (activeInput && activeInput.value && activeInput.value.includes("/")) {
@@ -306,24 +319,41 @@
             const tempNow = new Date();
             let currentHour = String(tempNow.getHours()).padStart(2, '0');
             let currentMin = String(tempNow.getMinutes()).padStart(2, '0');
+            let currentSec = String(tempNow.getSeconds()).padStart(2, '0');
+            
+            let sys_time_format = (window.frappe && frappe.boot && frappe.boot.sysdefaults && frappe.boot.sysdefaults.time_format) ? frappe.boot.sysdefaults.time_format : "HH:mm:ss";
+            let showSeconds = sys_time_format.includes("ss");
+
             if (activeInput.value && activeInput.value.includes(" ")) {
                 const timePart = activeInput.value.split(" ")[1];
-                if (timePart.includes(":")) [currentHour, currentMin] = timePart.split(":");
+                let tParts = timePart.split(":");
+                if (tParts.length > 0) currentHour = String(tParts[0]).padStart(2, '0');
+                if (tParts.length > 1) currentMin = String(tParts[1]).padStart(2, '0');
+                if (tParts.length > 2) currentSec = String(tParts[2]).padStart(2, '0');
             }
             timeHtml = `
                 <div class="datepicker--time">
-                    <div class="datepicker--time-current" style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px; font-weight: bold; font-size: 14px;">
+                    <div class="datepicker--time-current" style="display: flex; flex-direction: row !important; justify-content: center; align-items: center; margin-bottom: 10px; font-weight: bold; font-size: 14px; direction: ltr !important;">
                         <span class="datepicker--time-current-hours" style="padding: 2px 6px; border-radius: 4px;">${currentHour}</span>
                         <span class="datepicker--time-current-colon" style="margin: 0 2px;">:</span>
                         <span class="datepicker--time-current-minutes" style="padding: 2px 6px; border-radius: 4px;">${currentMin}</span>
+                        ${showSeconds ? `
+                        <span class="datepicker--time-current-colon" style="margin: 0 2px;">:</span>
+                        <span class="datepicker--time-current-seconds" style="padding: 2px 6px; border-radius: 4px;">${currentSec}</span>
+                        ` : ''}
                     </div>
                     <div class="datepicker--time-sliders" style="padding: 0 10px;">
                         <div class="datepicker--time-row" data-time="hours" style="margin-bottom: 8px;">
                             <input type="range" class="custom-bridge-hour" name="hours" value="${parseInt(currentHour, 10)}" min="0" max="23" step="1" style="width: 100%; cursor: pointer;">
                         </div>
-                        <div class="datepicker--time-row" data-time="minutes">
+                        <div class="datepicker--time-row" data-time="minutes" ${showSeconds ? 'style="margin-bottom: 8px;"' : ''}>
                             <input type="range" class="custom-bridge-min" name="minutes" value="${parseInt(currentMin, 10)}" min="0" max="59" step="1" style="width: 100%; cursor: pointer;">
                         </div>
+                        ${showSeconds ? `
+                        <div class="datepicker--time-row" data-time="seconds">
+                            <input type="range" class="custom-bridge-sec" name="seconds" value="${parseInt(currentSec, 10)}" min="0" max="59" step="1" style="width: 100%; cursor: pointer;">
+                        </div>
+                        ` : ''}
                     </div>
                 </div>`;
         }
@@ -353,14 +383,22 @@
         if (isDatetime) {
             let hEl = pickerEl.querySelector(".custom-bridge-hour");
             let mEl = pickerEl.querySelector(".custom-bridge-min");
+            let sEl = pickerEl.querySelector(".custom-bridge-sec");
             let h = hEl ? hEl.value : "00";
             let m = mEl ? mEl.value : "00";
-            timePart = ` ${h.padStart(2, '0')}:${m.padStart(2, '0')}:00`;
+            let s = sEl ? sEl.value : "00";
+            
+            let sys_time_format = (window.frappe && frappe.boot && frappe.boot.sysdefaults && frappe.boot.sysdefaults.time_format) ? frappe.boot.sysdefaults.time_format : "HH:mm:ss";
+            let showSeconds = sys_time_format.includes("ss");
+            
+            timePart = ` ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${showSeconds ? String(s).padStart(2, '0') : '00'}`;
             
             let hSpan = pickerEl.querySelector(".datepicker--time-current-hours");
             let mSpan = pickerEl.querySelector(".datepicker--time-current-minutes");
+            let sSpan = pickerEl.querySelector(".datepicker--time-current-seconds");
             if (hSpan) hSpan.textContent = String(h).padStart(2, '0');
             if (mSpan) mSpan.textContent = String(m).padStart(2, '0');
+            if (sSpan && showSeconds) sSpan.textContent = String(s).padStart(2, '0');
         }
 
         let selectedStr = `${targetYear}/${String(targetMonth).padStart(2, '0')}/${String(d).padStart(2, '0')}${timePart}`;
@@ -878,6 +916,8 @@
                 let style = document.createElement('style');
                 style.id = 'jalali-global-fixes';
                 style.textContent = `
+                    /* Removed mandatory alignment on text editors per user request */
+                    
                     /* Fix Gantt RTL Text Mirroring */
                     .gantt-container svg text, 
                     .gantt-container svg .bar-label {
@@ -946,9 +986,6 @@
                     [dir="rtl"] .onb-panel {
                         left: 20px !important;
                         right: auto !important;
-                        position: fixed !important;
-                        bottom: 20px !important;
-                        z-index: 9999 !important;
                     }
                     /* Fix Gantt Chart SVG Mirroring (Prevents Jumping) */
                     [dir="rtl"] .gantt-container svg {
